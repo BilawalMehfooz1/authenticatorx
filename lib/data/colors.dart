@@ -9,6 +9,16 @@ const authBackColor2 = Color.fromRGBO(83, 197, 237, 0.1);
 
 const gradient = LinearGradient(
   colors: [authBackColor1, authBackColor2],
-  begin: Alignment.centerLeft,
-  end: Alignment.centerRight,
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
+final lightTheme = ThemeData(
+  primaryColor: whiteColor,
+  brightness: Brightness.light,
+);
+
+final darkTheme = ThemeData(
+  primaryColor: blackColor,
+  brightness: Brightness.dark,
 );

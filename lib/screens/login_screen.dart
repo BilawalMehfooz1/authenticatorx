@@ -1,3 +1,4 @@
+import 'package:authenticatorx/screens/username_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:authenticatorx/data/colors.dart';
@@ -11,15 +12,51 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _visibility = true;
+  bool _isTextFocused = false;
+  bool _isFirstDialog = false;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(() {
+      if (_emailController.text.isNotEmpty) {
+        setState(() {
+          _isFirstDialog = true;
+        });
+      } else {
+        setState(() {
+          _isFirstDialog = false;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
     super.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+  }
+
+  void updateIsTextFocused(bool isFocused) {
+    setState(() {
+      _isTextFocused = isFocused;
+    });
+  }
+
+  //change to sign up screen
+  void signUp() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) {
+          return const UserNameScreen();
+        },
+      ),
+    );
   }
 
   @override
@@ -37,12 +74,16 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'English (US)',
-                    style: TextStyle(
-                      color: greyColor,
+                //Language change Button
+                Visibility(
+                  visible: !_isTextFocused,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'English (US)',
+                      style: TextStyle(
+                        color: greyColor,
+                      ),
                     ),
                   ),
                 ),
@@ -59,24 +100,44 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextInputField(
                   labelText: 'Enter your email',
                   keyboardType: TextInputType.emailAddress,
+                  isFocusedCallback: updateIsTextFocused,
                   controller: _emailController,
-                  icon: Icons.clear,
+                  icon: _isFirstDialog ? Icons.clear : null,
+                  validator: (p0) {
+                    return null;
+                  },
+                  onPressed: () {
+                    setState(() {
+                      _emailController.clear();
+                    });
+                  },
                 ),
                 const SizedBox(height: 12),
 
                 //Password Input Field
                 TextInputField(
                   labelText: 'Enter your password',
-                  obsecureText: true,
+                  obsecureText: _visibility,
                   keyboardType: TextInputType.text,
+                  isFocusedCallback: updateIsTextFocused,
                   controller: _passwordController,
-                  icon: Icons.visibility_off,
+                  icon: _visibility ? Icons.visibility_off : Icons.visibility,
+                  validator: (p0) {
+                    return null;
+                  },
+                  onPressed: () {
+                    setState(() {
+                      _visibility = !_visibility;
+                    });
+                  },
                 ),
                 const SizedBox(height: 12),
 
                 //Login Button
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    signUp();
+                  },
                   child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
@@ -95,30 +156,45 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
+                //Forgor Password Button
+                TextButton(
+                  onPressed: () {},
+                  child: const Text(
+                    'Forgot password?',
+                    style: TextStyle(
+                      color: blackColor,
+                    ),
+                  ),
+                ),
+
                 const Spacer(flex: 2),
 
                 //switch to sign up
-                InkWell(
-                  onTap: () {},
-                  child: Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: blueColor),
-                      borderRadius: const BorderRadius.all(Radius.circular(25)),
-                      color: Colors.transparent,
-                    ),
-                    child: const Text(
-                      'Create new account',
-                      style: TextStyle(
-                        color: blueColor,
-                        fontSize: 16,
+                Visibility(
+                  visible: !_isTextFocused,
+                  child: InkWell(
+                    onTap: signUp,
+                    child: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: blueColor),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(25)),
+                        color: Colors.transparent,
+                      ),
+                      child: const Text(
+                        'Create new account',
+                        style: TextStyle(
+                          color: blueColor,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
               ],
             ),
           ),
