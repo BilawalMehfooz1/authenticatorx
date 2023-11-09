@@ -8,14 +8,12 @@ class TextInputField extends StatefulWidget {
     required this.icon,
     required this.labelText,
     required this.validator,
-    required this.hasError,
     required this.onPressed,
     required this.controller,
     required this.keyboardType,
     required this.isFocusedCallback,
   });
 
-  final bool hasError;
   final IconData? icon;
   final String labelText;
   final bool obsecureText;
@@ -32,9 +30,10 @@ class TextInputField extends StatefulWidget {
 class _TextInputFieldState extends State<TextInputField> {
   bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
-  final inputBorder = const OutlineInputBorder(
-      borderSide: BorderSide(color: greyColor),
-      borderRadius: BorderRadius.all(Radius.circular(10)));
+  final _inputBorder = const OutlineInputBorder(
+    borderSide: BorderSide(color: greyColor),
+    borderRadius: BorderRadius.all(Radius.circular(10)),
+  );
 
   @override
   void initState() {
@@ -43,7 +42,9 @@ class _TextInputFieldState extends State<TextInputField> {
       setState(() {
         _isFocused = _focusNode.hasFocus;
       });
-      widget.isFocusedCallback!(_isFocused);
+      if (widget.isFocusedCallback != null) {
+        widget.isFocusedCallback!(_isFocused);
+      }
     });
   }
 
@@ -55,41 +56,41 @@ class _TextInputFieldState extends State<TextInputField> {
 
   @override
   Widget build(BuildContext context) {
+    // Styles
+    final style = Theme.of(context);
+    final textColor = style.colorScheme.onBackground;
+    final brightness = Theme.of(context).brightness == Brightness.dark;
+    final fillColor =
+        brightness ? const Color.fromARGB(255, 27, 34, 39) : whiteColor;
+    const labelStyle = TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+    );
+
+    // Main Body
     return TextFormField(
-      validator: widget.validator,
       focusNode: _focusNode,
-      cursorColor: widget.hasError ? Colors.red : blackColor, // Cursor color
-      obscureText: widget.obsecureText,
+      cursorColor: textColor,
+      validator: widget.validator,
       controller: widget.controller,
+      obscureText: widget.obsecureText,
       keyboardType: widget.keyboardType,
       decoration: InputDecoration(
-        labelText: widget.labelText,
-        floatingLabelStyle: TextStyle(
-          color: widget.hasError ? Colors.red : blackColor, // Label color
-        ),
-        labelStyle: TextStyle(
-          color: widget.hasError ? Colors.red : greyColor, // Label color
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-        ),
-        border: inputBorder,
-        focusedBorder: inputBorder.copyWith(
-          borderSide: BorderSide(
-            color: widget.hasError
-                ? Colors.red
-                : blackColor, // Focused border color
-          ),
-        ),
-        suffixIconColor: _isFocused ? blackColor : greyColor,
-        suffixIcon: IconButton(
-          onPressed: widget.onPressed,
-          icon: Icon(
-            widget.icon,
-          ), // Icon color
-        ),
-        enabledBorder: inputBorder,
+        errorMaxLines: 2,
         filled: true,
-        fillColor: whiteColor, // Fill color
+        fillColor: fillColor,
+        border: _inputBorder,
+        labelStyle: labelStyle,
+        labelText: widget.labelText,
+        enabledBorder: _inputBorder,
+        floatingLabelStyle: TextStyle(color: textColor),
+        suffixIconColor: _isFocused ? textColor : greyColor,
+        suffixIcon:
+            IconButton(onPressed: widget.onPressed, icon: Icon(widget.icon)),
+        focusedBorder:
+            _inputBorder.copyWith(borderSide: BorderSide(color: textColor)),
+        errorBorder: _inputBorder.copyWith(
+            borderSide: const BorderSide(color: Colors.red)),
       ),
     );
   }

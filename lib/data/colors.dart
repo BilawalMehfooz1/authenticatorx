@@ -13,7 +13,22 @@ const gradient = LinearGradient(
   end: Alignment.bottomRight,
 );
 
+const gradient1 = LinearGradient(
+  colors: [authBackColor1, authBackColor2],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+const gradient2 = LinearGradient(
+  colors: [
+    Color.fromARGB(255, 3, 26, 41),
+    Color.fromRGBO(1, 31, 20, 1),
+  ],
+  begin: Alignment.centerLeft,
+  end: Alignment.bottomRight,
+);
+
 final lightTheme = ThemeData(
+  colorScheme: ColorScheme.fromSeed(seedColor: blueColor),
   primaryColor: whiteColor,
   brightness: Brightness.light,
 );

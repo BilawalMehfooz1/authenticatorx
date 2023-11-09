@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:authenticatorx/widgets/Auth/auth_data.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_code_screen.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EmailScreen extends ConsumerStatefulWidget {
   const EmailScreen({super.key});
@@ -13,7 +13,7 @@ class EmailScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<EmailScreen> {
-  bool _hasError = false;
+  bool _isLoading = false;
   bool _isTextFocused = false;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -24,131 +24,149 @@ class _SignUpScreenState extends ConsumerState<EmailScreen> {
     _emailController.dispose();
   }
 
+  //Method to Display Different Icon info or Icon clear based on Condition
   void updateIsTextFocused(bool isFocused) {
     setState(() {
       _isTextFocused = isFocused;
     });
   }
 
+  // Go Back Screen Method for Button on Top
+  void _goBack() {
+    Navigator.of(context).pop();
+  }
+
+  // Email Validator
+  String? _validator(value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email required.';
+    }
+    if (!value.contains('@') ||
+        (!value.endsWith('gmail.com') &&
+            !value.endsWith('yahoo.com') &&
+            !value.endsWith('outlook.com') &&
+            !value.endsWith('hotmail.com') &&
+            !value.endsWith('aol.com'))) {
+      return 'Enter a valid email address.';
+    }
+    return null;
+  }
+
+  // Clear Username Controller
+  void _clearController() {
+    if (_isTextFocused) {
+      _emailController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = ref.read(userDataProvider);
+    const width = double.infinity;
+    final style = Theme.of(context);
+    final get = ref.read(userDataProvider);
+    final brightness = style.brightness == Brightness.light;
+    final gradient = brightness ? gradient1 : gradient2;
+
     // Next Page method of username
-    void nextPage() {
-      final mail = _emailController.text;
-      user.getEmail(mail);
+    void nextPage() async {
       if (_formKey.currentState!.validate()) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) =>
-                ConfirmationScreen(email: _emailController.text),
-          ),
-        );
+        setState(() {
+          _isLoading = true;
+        });
+
+        get.getEmail(_emailController.text);
+        await Future.delayed(const Duration(seconds: 1));
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) =>
+                  ConfirmationScreen(email: _emailController.text),
+            ),
+          );
+        }
       }
     }
 
     return Scaffold(
       body: SafeArea(
-          child: Container(
-        decoration: const BoxDecoration(gradient: gradient),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              //Floating back button
-              IconButton(
-                padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
-                alignment: Alignment.topLeft,
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
+        child: Container(
+          width: width,
+          decoration: BoxDecoration(gradient: gradient),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
 
-              //Title
-              Text(
-                "What's you email?",
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-              ),
-              const SizedBox(height: 12),
+          // Form for Text Input Field
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                //Floating back button
+                IconButton(
+                  onPressed: _goBack,
+                  alignment: Alignment.topLeft,
+                  icon: const Icon(Icons.arrow_back),
+                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+                ),
 
-              //Title Body
-              const Text(
-                'Enter the email where you can be contacted. No one will see this on your profile.',
-              ),
-              const SizedBox(height: 24),
-
-              //Username Text Field
-              TextInputField(
-                hasError: _hasError,
-                icon: _isTextFocused ? Icons.clear : null,
-                labelText: 'Email',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    setState(() {
-                      _hasError = true;
-                    });
-                    return 'Email required.';
-                  }
-                  if (!value.contains('@') ||
-                      (!value.endsWith('gmail.com') &&
-                          !value.endsWith('yahoo.com') &&
-                          !value.endsWith('outlook.com') &&
-                          !value.endsWith('hotmail.com') &&
-                          !value.endsWith('aol.com'))) {
-                    setState(() {
-                      _hasError = true;
-                    });
-                    return 'Enter a valid email address.';
-                  }
-                  setState(() {
-                    _hasError = false;
-                  });
-                  return null;
-                },
-                onPressed: _isTextFocused
-                    ? () {
-                        _emailController.clear();
-                      }
-                    : null,
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                isFocusedCallback: updateIsTextFocused,
-              ),
-              const SizedBox(height: 24),
-
-              //Next Button
-              InkWell(
-                onTap: () {
-                  nextPage();
-                },
-                child: Container(
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(25)),
-                    color: blueColor,
-                  ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: whiteColor,
-                    ),
+                //Title
+                Text(
+                  "What's you email?",
+                  style: style.textTheme.titleLarge!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+
+                //Title Body
+                const Text(
+                    'Enter the email where you can be contacted. No one will see this on your profile.'),
+                const SizedBox(height: 24),
+
+                //Username Text Field
+                TextInputField(
+                  icon: _isTextFocused ? Icons.clear : null,
+                  labelText: 'Email',
+                  validator: _validator,
+                  onPressed: _clearController,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  isFocusedCallback: updateIsTextFocused,
+                ),
+                const SizedBox(height: 24),
+
+                //Next Button
+                InkWell(
+                  onTap: _isLoading ? null : nextPage,
+                  child: Container(
+                    width: width,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(25)),
+                      color: blueColor,
+                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: whiteColor)
+                        : const Text(
+                            'Next',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: whiteColor,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      )),
+      ),
     );
   }
 }

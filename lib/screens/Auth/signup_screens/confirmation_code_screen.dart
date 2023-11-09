@@ -12,7 +12,7 @@ class ConfirmationScreen extends StatefulWidget {
 }
 
 class _ConfirmationScreenState extends State<ConfirmationScreen> {
-  bool _hasError = false;
+  bool _isLoading = false;
   bool _isTextFocused = false;
   final _formKey = GlobalKey<FormState>();
   final _confirmationController = TextEditingController();
@@ -24,13 +24,21 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   }
 
   // Next Page method of username
-  void nextPage() {
+  void nextPage() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
+      }
     }
   }
 
@@ -40,14 +48,44 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
     });
   }
 
+  // Go Back Screen Method for Button on Top
+  void _goBack() {
+    Navigator.of(context).pop();
+  }
+
+  //Confirmation Code Validator
+  String? _validator(value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Code is required. Check you email to find the code.';
+    }
+    if (value.trim().length < 6) {
+      return ' Code is too short.Check that you entered it correctly and try again.';
+    }
+    return null;
+  }
+
+  // Clear Username Controller
+  void _clearController() {
+    if (_isTextFocused) {
+      _confirmationController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    const width = double.infinity;
+    final style = Theme.of(context);
+    final brightness = style.brightness == Brightness.light;
+    final gradient = brightness ? gradient1 : gradient2;
+
     return Scaffold(
       body: SafeArea(
           child: Container(
-        decoration: const BoxDecoration(gradient: gradient),
-        width: double.infinity,
+        width: width,
+        decoration: BoxDecoration(gradient: gradient),
         padding: const EdgeInsets.symmetric(horizontal: 20),
+
+        // Form for Text Input Field
         child: Form(
           key: _formKey,
           child: Column(
@@ -55,12 +93,10 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
             children: [
               //Floating back button
               IconButton(
-                padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+                onPressed: _goBack,
                 alignment: Alignment.topLeft,
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
               ),
 
               //Title
@@ -75,64 +111,41 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
 
               //Title Body
               Text(
-                "To confirm you account, enter the 6-digit code we sent to ${widget.email}.",
-              ),
+                  "To confirm you account, enter the 6-digit code we sent to ${widget.email}."),
               const SizedBox(height: 24),
 
               //Username Text Field
               TextInputField(
-                hasError: _hasError,
                 icon: _isTextFocused ? Icons.clear : Icons.info_outline,
                 labelText: 'Confirmation code',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    setState(() {
-                      _hasError = true;
-                    });
-                    return 'Code is required. Check you email to find the code.';
-                  }
-                  if (value.trim().length < 6) {
-                    setState(() {
-                      _hasError = true;
-                    });
-                    return ' Code is too short.Check that you entered it correctly and try again.';
-                  }
-                  setState(() {
-                    _hasError = false;
-                  });
-                  return null;
-                },
-                onPressed: _isTextFocused
-                    ? () {
-                        _confirmationController.clear();
-                      }
-                    : null,
-                controller: _confirmationController,
+                validator: _validator,
+                onPressed: _clearController,
                 keyboardType: TextInputType.number,
+                controller: _confirmationController,
                 isFocusedCallback: updateIsTextFocused,
               ),
               const SizedBox(height: 24),
 
               //Next Button
               InkWell(
-                onTap: () {
-                  nextPage();
-                },
+                onTap: _isLoading ? null : nextPage,
                 child: Container(
-                  width: double.infinity,
+                  width: width,
                   alignment: Alignment.center,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(25)),
                     color: blueColor,
                   ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: whiteColor,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: whiteColor)
+                      : const Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: whiteColor,
+                          ),
+                        ),
                 ),
               ),
             ],

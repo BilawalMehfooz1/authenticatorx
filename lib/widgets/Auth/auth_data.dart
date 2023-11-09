@@ -16,9 +16,6 @@ class UserData {
 
   void getPassword(String p) {
     password = p;
-    print(username);
-    print(email);
-    print(password);
   }
 
   void getEmail(String e) {
