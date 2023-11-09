@@ -1,4 +1,4 @@
-import 'package:authenticatorx/screens/username_screen.dart';
+import 'package:authenticatorx/screens/Auth/signup_screens/username_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:authenticatorx/data/colors.dart';
@@ -12,6 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _hasError = false;
   bool _visibility = true;
   bool _isTextFocused = false;
   bool _isFirstDialog = false;
@@ -98,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 //Email Input Field
                 TextInputField(
+                  hasError: _hasError,
                   labelText: 'Enter your email',
                   keyboardType: TextInputType.emailAddress,
                   isFocusedCallback: updateIsTextFocused,
@@ -116,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 //Password Input Field
                 TextInputField(
+                  hasError: _hasError,
                   labelText: 'Enter your password',
                   obsecureText: _visibility,
                   keyboardType: TextInputType.text,

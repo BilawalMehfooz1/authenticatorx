@@ -8,12 +8,14 @@ class TextInputField extends StatefulWidget {
     required this.icon,
     required this.labelText,
     required this.validator,
+    required this.hasError,
     required this.onPressed,
     required this.controller,
     required this.keyboardType,
     required this.isFocusedCallback,
   });
 
+  final bool hasError;
   final IconData? icon;
   final String labelText;
   final bool obsecureText;
@@ -21,7 +23,7 @@ class TextInputField extends StatefulWidget {
   final TextInputType keyboardType;
   final TextEditingController controller;
   final String? Function(String?) validator;
-  final void Function(bool) isFocusedCallback;
+  final void Function(bool)? isFocusedCallback;
 
   @override
   State<TextInputField> createState() => _TextInputFieldState();
@@ -41,7 +43,7 @@ class _TextInputFieldState extends State<TextInputField> {
       setState(() {
         _isFocused = _focusNode.hasFocus;
       });
-      widget.isFocusedCallback(_isFocused);
+      widget.isFocusedCallback!(_isFocused);
     });
   }
 
@@ -56,32 +58,38 @@ class _TextInputFieldState extends State<TextInputField> {
     return TextFormField(
       validator: widget.validator,
       focusNode: _focusNode,
-      cursorColor: blackColor,
+      cursorColor: widget.hasError ? Colors.red : blackColor, // Cursor color
       obscureText: widget.obsecureText,
       controller: widget.controller,
       keyboardType: widget.keyboardType,
       decoration: InputDecoration(
         labelText: widget.labelText,
-        floatingLabelStyle: const TextStyle(color: blackColor),
-        labelStyle: const TextStyle(
-          color: greyColor,
+        floatingLabelStyle: TextStyle(
+          color: widget.hasError ? Colors.red : blackColor, // Label color
+        ),
+        labelStyle: TextStyle(
+          color: widget.hasError ? Colors.red : greyColor, // Label color
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),
         border: inputBorder,
         focusedBorder: inputBorder.copyWith(
-          borderSide: const BorderSide(
-            color: blackColor,
+          borderSide: BorderSide(
+            color: widget.hasError
+                ? Colors.red
+                : blackColor, // Focused border color
           ),
         ),
         suffixIconColor: _isFocused ? blackColor : greyColor,
         suffixIcon: IconButton(
           onPressed: widget.onPressed,
-          icon: Icon(widget.icon),
+          icon: Icon(
+            widget.icon,
+          ), // Icon color
         ),
         enabledBorder: inputBorder,
         filled: true,
-        fillColor: whiteColor,
+        fillColor: whiteColor, // Fill color
       ),
     );
   }

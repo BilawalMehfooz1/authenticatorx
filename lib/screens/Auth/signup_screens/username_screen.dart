@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:authenticatorx/screens/login_screen.dart';
+import 'package:authenticatorx/widgets/Auth/auth_data.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
+import 'package:authenticatorx/screens/Auth/signup_screens/password_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class UserNameScreen extends StatefulWidget {
+class UserNameScreen extends ConsumerStatefulWidget {
   const UserNameScreen({super.key});
 
   @override
-  State<UserNameScreen> createState() => _SignUpScreenState();
+  ConsumerState<UserNameScreen> createState() => _UserNameScreenState();
 }
 
-class _SignUpScreenState extends State<UserNameScreen> {
+class _UserNameScreenState extends ConsumerState<UserNameScreen> {
+  bool _hasError = false;
   bool _isTextFocused = false;
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
@@ -21,16 +24,6 @@ class _SignUpScreenState extends State<UserNameScreen> {
     _usernameController.dispose();
   }
 
-  void nextPage() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
-    }
-  }
-
   void updateIsTextFocused(bool isFocused) {
     setState(() {
       _isTextFocused = isFocused;
@@ -39,6 +32,20 @@ class _SignUpScreenState extends State<UserNameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final data = ref.read(userDataProvider);
+    // Next Page method of username
+    void nextPage() {
+      if (_formKey.currentState!.validate()) {
+        final username = _usernameController.text;
+        data.getUsername(username);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const PasswordScreen(),
+          ),
+        );
+      }
+    }
+
     return Scaffold(
       body: SafeArea(
           child: Container(
@@ -52,7 +59,7 @@ class _SignUpScreenState extends State<UserNameScreen> {
             children: [
               //Floating back button
               IconButton(
-                padding: const EdgeInsets.fromLTRB(0, 16, 0, 32),
+                padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
                 alignment: Alignment.topLeft,
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
@@ -72,21 +79,30 @@ class _SignUpScreenState extends State<UserNameScreen> {
 
               //Title Body
               const Text(
-                'Add a username. You can change this username at any time.',
-              ),
-              const SizedBox(height: 20),
+                  'Add a username. You can change this username at any time.'),
+              const SizedBox(height: 24),
 
               //Username Text Field
               TextInputField(
+                hasError: _hasError,
                 icon: _isTextFocused ? Icons.clear : Icons.info_outline,
                 labelText: 'Username',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
+                    setState(() {
+                      _hasError = true;
+                    });
                     return 'Choose a username to continue.';
                   }
                   if (value.trim().length < 4) {
+                    setState(() {
+                      _hasError = true;
+                    });
                     return ' Username must be atleast 4 characters.';
                   }
+                  setState(() {
+                    _hasError = false;
+                  });
                   return null;
                 },
                 onPressed: _isTextFocused
@@ -98,7 +114,7 @@ class _SignUpScreenState extends State<UserNameScreen> {
                 keyboardType: TextInputType.text,
                 isFocusedCallback: updateIsTextFocused,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               //Next Button
               InkWell(
