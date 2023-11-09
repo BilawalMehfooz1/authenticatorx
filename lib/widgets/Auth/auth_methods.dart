@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:authenticatorx/widgets/Auth/auth_data.dart'; 
+import 'package:authenticatorx/providers/auth_data_provider.dart';
 
 class AuthMethods {
   final _auth = FirebaseAuth.instance;
@@ -9,10 +9,10 @@ class AuthMethods {
   Future<String> signUp() async {
     String res = 'Some error occurred';
     try {
-      // Get user data from the UserData class
+      // Getting User Data from auth_data_provider
+      String email = UserData().email;
       String username = UserData().username;
       String password = UserData().password;
-      String email = UserData().email;
 
       if (username.isNotEmpty && password.isNotEmpty && email.isNotEmpty) {
         final cred = await _auth.createUserWithEmailAndPassword(
@@ -21,15 +21,23 @@ class AuthMethods {
         );
 
         if (cred.user != null) {
-          // User registration successful
-          // Now, save user data to Firestore
-          await _firestore.collection('users').doc(cred.user!.uid).set({
-            'username': username,
-            'uid': cred.user!.uid,
-            'email': email,
-            // Add other user data fields as needed
-          });
-          res = 'success';
+          // Send a confirmation email to the user for validation
+          await cred.user!.sendEmailVerification();
+
+          // Checking if the email is verified
+          if (cred.user!.emailVerified) {
+            // User registration successful
+            // Now, saving user data to Firestore
+            await _firestore.collection('users').doc(cred.user!.uid).set({
+              'username': username,
+              'uid': cred.user!.uid,
+              'email': email,
+            });
+            res = 'success';
+          } else {
+            // User's email is not verified. You can handle this case.
+            res = 'Email not verified';
+          }
         }
       }
     } catch (e) {

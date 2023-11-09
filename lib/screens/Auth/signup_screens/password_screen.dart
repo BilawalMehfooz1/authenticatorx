@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:authenticatorx/widgets/Auth/auth_data.dart';
+import 'package:authenticatorx/providers/auth_data_provider.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/email_screen.dart';
 
@@ -63,7 +63,7 @@ class _SignUpScreenState extends ConsumerState<PasswordScreen> {
         });
 
         FocusScope.of(context).unfocus();
-        get.getPassword(_passwordController.text);
+        get.password = _passwordController.text;
 
         await Future.delayed(const Duration(seconds: 1));
         setState(() {

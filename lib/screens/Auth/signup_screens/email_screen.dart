@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:authenticatorx/widgets/Auth/auth_data.dart';
+import 'package:authenticatorx/providers/auth_data_provider.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_code_screen.dart';
 
@@ -74,7 +74,8 @@ class _SignUpScreenState extends ConsumerState<EmailScreen> {
           _isLoading = true;
         });
 
-        get.getEmail(_emailController.text);
+        get.email = _emailController.text;
+        get.show();
         await Future.delayed(const Duration(seconds: 1));
 
         setState(() {
