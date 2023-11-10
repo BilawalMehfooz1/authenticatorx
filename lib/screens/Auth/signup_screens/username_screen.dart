@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:authenticatorx/providers/auth_data_provider.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/password_screen.dart';
 
-class UserNameScreen extends ConsumerStatefulWidget {
+class UserNameScreen extends StatefulWidget {
   const UserNameScreen({super.key});
 
   @override
-  ConsumerState<UserNameScreen> createState() => _UserNameScreenState();
+  State<UserNameScreen> createState() => _UserNameScreenState();
 }
 
-class _UserNameScreenState extends ConsumerState<UserNameScreen> {
+class _UserNameScreenState extends State<UserNameScreen> {
   bool _isLoading = false;
   bool _isTextFocused = false;
   final _formKey = GlobalKey<FormState>();
@@ -55,39 +53,37 @@ class _UserNameScreenState extends ConsumerState<UserNameScreen> {
     }
   }
 
+  // Next Page method of username
+  void nextPage() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      FocusScope.of(context).unfocus();
+      await Future.delayed(const Duration(seconds: 1));
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) =>
+                PasswordScreen(username: _usernameController.text),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const width = double.infinity;
     final style = Theme.of(context);
-    final get = ref.read(userDataProvider);
     final brightness = style.brightness == Brightness.light;
     final gradient = brightness ? gradient1 : gradient2;
-
-    // Next Page method of username
-    void nextPage() async {
-      if (_formKey.currentState!.validate()) {
-        setState(() {
-          _isLoading = true;
-        });
-
-        FocusScope.of(context).unfocus();
-        get.username = _usernameController.text;
-
-        await Future.delayed(const Duration(seconds: 1));
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const PasswordScreen(),
-            ),
-          );
-        }
-      }
-    }
 
     return Scaffold(
       body: SafeArea(

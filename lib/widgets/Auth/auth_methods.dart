@@ -1,48 +1,152 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:authenticatorx/providers/auth_data_provider.dart';
+import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_screen.dart';
 
 class AuthMethods {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
 
-  Future<String> signUp() async {
-    String res = 'Some error occurred';
+  // Part 1: Sending Email Verification
+  Future<String> sendEmailVerification({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
     try {
-      // Getting User Data from auth_data_provider
-      String email = UserData().email;
-      String username = UserData().username;
-      String password = UserData().password;
+      // Check if the user exists in authentication
+      final existingUser = await _auth.fetchSignInMethodsForEmail(email);
 
-      if (username.isNotEmpty && password.isNotEmpty && email.isNotEmpty) {
-        final cred = await _auth.createUserWithEmailAndPassword(
+      // If the user exists, checking if the email is verified
+      if (existingUser.isNotEmpty) {
+        final exisUser = await _auth.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
 
-        if (cred.user != null) {
-          // Send a confirmation email to the user for validation
-          await cred.user!.sendEmailVerification();
-
-          // Checking if the email is verified
-          if (cred.user!.emailVerified) {
-            // User registration successful
-            // Now, saving user data to Firestore
-            await _firestore.collection('users').doc(cred.user!.uid).set({
-              'username': username,
-              'uid': cred.user!.uid,
-              'email': email,
-            });
-            res = 'success';
-          } else {
-            // User's email is not verified. You can handle this case.
-            res = 'Email not verified';
-          }
+        // Check if the user's email is verified
+        if (!exisUser.user!.emailVerified) {
+          // Delete the existing user account
+          await exisUser.user!.delete();
+        } else {
+          return 'An account with this email already exists. Please log in.';
         }
       }
+
+      // Create a new user with the provided email and password
+      await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Send a confirmation email to the user for verification
+      await _auth.currentUser!.sendEmailVerification();
+
+      if (context.mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return ConfirmationScreen(
+                email: email,
+                username: username,
+                password: password,
+              );
+            },
+          ),
+        );
+      }
+      return 'success';
     } catch (e) {
-      res = e.toString();
+      // Handle specific error cases or provide a generic message
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'email-already-in-use':
+            return 'An account with this email already exists. Please log in.';
+          // Add more cases as needed
+          default:
+            return 'Error: ${e.message}';
+        }
+      } else if (e is SocketException) {
+        // Handle no internet connection
+        return 'No internet connection. Please check your network.';
+      } else {
+        return 'Oops! Something went wrong. Please try again later.';
+      }
     }
-    return res;
+  }
+
+  // Resend email verification method
+  Future<String> resendVerificationEmail({
+    required String email,
+    required String password,
+    required String username,
+    required BuildContext context,
+  }) async {
+    try {
+      // Send a confirmation email to the user for verification
+      await _auth.currentUser!.sendEmailVerification();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification email resent')),
+        );
+      }
+
+      return 'Verification email resent.';
+    } catch (e) {
+      // Handle specific error cases or provide a generic message
+      if (e is FirebaseAuthException) {
+        return 'Error: ${e.message}';
+      } else {
+        return 'Oops! Something went wrong. Please try again later.';
+      }
+    }
+  }
+
+  // Part 2: Complete Registration Process
+  Future<String> completeRegistration({
+    required String username,
+    required String password,
+    required BuildContext context,
+  }) async {
+    try {
+      // Retrieve the current user
+      final user = _auth.currentUser;
+
+      // Check if the user is not null
+      if (user != null) {
+        // Adding short delay to allow Firebase to update the email verification status
+        await Future.delayed(const Duration(seconds: 1));
+
+        // Checking if the email is verified
+        await user.reload();
+
+        if (user.emailVerified) {
+          // Now, saving user data to Firestore
+          await _firestore.collection('users').doc(user.uid).set({
+            'username': username,
+            'uid': user.uid,
+            'email': user.email,
+          });
+
+          return 'success';
+        } else {
+          // User's email is not verified. You can handle this case.
+          return 'Email not verified. Please check your email for the verification link.';
+        }
+      } else {
+        return 'User not found. Please try again later.';
+      }
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        return 'Error: ${e.message}';
+      } else if (e is SocketException) {
+        return 'No internet connection. Please check your network.';
+      } else {
+        return 'Oops! Something went wrong. Please try again later.';
+      }
+    }
   }
 }

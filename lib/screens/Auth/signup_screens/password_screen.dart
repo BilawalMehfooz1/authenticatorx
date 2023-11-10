@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:authenticatorx/providers/auth_data_provider.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/email_screen.dart';
 
-class PasswordScreen extends ConsumerStatefulWidget {
-  const PasswordScreen({super.key});
+class PasswordScreen extends StatefulWidget {
+  const PasswordScreen({super.key, required this.username});
+
+  final String username;
 
   @override
-  ConsumerState<PasswordScreen> createState() => _SignUpScreenState();
+  State<PasswordScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends ConsumerState<PasswordScreen> {
+class _SignUpScreenState extends State<PasswordScreen> {
   bool _isLoading = false;
   bool _isVisibile = true;
   final _formKey = GlobalKey<FormState>();
@@ -51,7 +51,6 @@ class _SignUpScreenState extends ConsumerState<PasswordScreen> {
   Widget build(BuildContext context) {
     final style = Theme.of(context);
     const width = double.infinity;
-    final get = ref.read(userDataProvider);
     final brightness = style.brightness == Brightness.light;
     final gradient = brightness ? gradient1 : gradient2;
 
@@ -63,9 +62,8 @@ class _SignUpScreenState extends ConsumerState<PasswordScreen> {
         });
 
         FocusScope.of(context).unfocus();
-        get.password = _passwordController.text;
-
         await Future.delayed(const Duration(seconds: 1));
+
         setState(() {
           _isLoading = false;
         });
@@ -73,7 +71,10 @@ class _SignUpScreenState extends ConsumerState<PasswordScreen> {
         if (mounted) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => const EmailScreen(),
+              builder: (context) => EmailScreen(
+                username: widget.username,
+                password: _passwordController.text,
+              ),
             ),
           );
         }

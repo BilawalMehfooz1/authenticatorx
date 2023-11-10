@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:authenticatorx/providers/auth_data_provider.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
-import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_code_screen.dart';
+import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 
-class EmailScreen extends ConsumerStatefulWidget {
-  const EmailScreen({super.key});
+class EmailScreen extends StatefulWidget {
+  const EmailScreen({
+    super.key,
+    required this.username,
+    required this.password,
+  });
+
+  final String username, password;
 
   @override
-  ConsumerState<EmailScreen> createState() => _SignUpScreenState();
+  State<EmailScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends ConsumerState<EmailScreen> {
+class _SignUpScreenState extends State<EmailScreen> {
   bool _isLoading = false;
   bool _isTextFocused = false;
   final _formKey = GlobalKey<FormState>();
@@ -59,39 +63,43 @@ class _SignUpScreenState extends ConsumerState<EmailScreen> {
     }
   }
 
+  // Continue Method 
+  void nextPage() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final result = await AuthMethods().sendEmailVerification(
+        context: context,
+        email: _emailController.text,
+        password: widget.password,
+        username: widget.username,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        if (result == 'success') {
+        } else {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(result)));
+        }
+      }
+    }
+  }
+
+  // Resend Method
+
   @override
   Widget build(BuildContext context) {
     const width = double.infinity;
     final style = Theme.of(context);
-    final get = ref.read(userDataProvider);
     final brightness = style.brightness == Brightness.light;
     final gradient = brightness ? gradient1 : gradient2;
-
-    // Next Page method of username
-    void nextPage() async {
-      if (_formKey.currentState!.validate()) {
-        setState(() {
-          _isLoading = true;
-        });
-
-        get.email = _emailController.text;
-        get.show();
-        await Future.delayed(const Duration(seconds: 1));
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) =>
-                  ConfirmationScreen(email: _emailController.text),
-            ),
-          );
-        }
-      }
-    }
 
     return Scaffold(
       body: SafeArea(
