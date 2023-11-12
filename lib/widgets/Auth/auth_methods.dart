@@ -16,33 +16,30 @@ class AuthMethods {
     required BuildContext context,
   }) async {
     try {
-      // Check if the user exists in authentication
-      final existingUser = await _auth.fetchSignInMethodsForEmail(email);
+      // Check if the email is already in use
+      dynamic userCredential;
+      try {
+        userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } catch (signInError) {
+        // If sign-in fails, the user does not exist, proceed with creating a new user
+      }
 
-      // If the user exists, checking if the email is verified
-      if (existingUser.isNotEmpty) {
-        final exisUser = await _auth.signInWithEmailAndPassword(
+      if (userCredential == null) {
+        // Create a new user with the provided email and password
+        await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
 
-        // Check if the user's email is verified
-        if (!exisUser.user!.emailVerified) {
-          // Delete the existing user account
-          await exisUser.user!.delete();
-        } else {
-          return 'An account with this email already exists. Please log in.';
-        }
+        // Send a confirmation email to the user for verification
+        await _auth.currentUser!.sendEmailVerification();
+      } else {
+        // User exists but hasn't verified the email, resend verification
+        await _auth.currentUser!.sendEmailVerification();
       }
-
-      // Create a new user with the provided email and password
-      await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Send a confirmation email to the user for verification
-      await _auth.currentUser!.sendEmailVerification();
 
       if (context.mounted) {
         Navigator.of(context).push(
@@ -57,6 +54,7 @@ class AuthMethods {
           ),
         );
       }
+
       return 'success';
     } catch (e) {
       // Handle specific error cases or provide a generic message
@@ -117,9 +115,6 @@ class AuthMethods {
 
       // Check if the user is not null
       if (user != null) {
-        // Adding short delay to allow Firebase to update the email verification status
-        await Future.delayed(const Duration(seconds: 1));
-
         // Checking if the email is verified
         await user.reload();
 
@@ -134,7 +129,7 @@ class AuthMethods {
           return 'success';
         } else {
           // User's email is not verified. You can handle this case.
-          return 'Email not verified. Please check your email for the verification link.';
+          return 'Email not verified. Please check your email for the verification link. If you have already verified your email, please wait for a few seconds and then press "Continue". If you haven\'t received the email, you can click "Resend" to receive the verification email again.';
         }
       } else {
         return 'User not found. Please try again later.';

@@ -1,7 +1,9 @@
+import 'package:authenticatorx/data/error_messages.dart';
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
 import 'package:authenticatorx/screens/home_screen.dart';
 import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   const ConfirmationScreen({
@@ -50,8 +52,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(res)));
+        showErrorDialog(context: context, content: res);
       }
     }
   }
@@ -112,20 +113,17 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                   style: style.textTheme.titleLarge!
                       .copyWith(fontWeight: FontWeight.bold, fontSize: 22)),
               const SizedBox(height: 12),
-
+              // Mail Icon
+              Center(
+                child: SvgPicture.asset(
+                  'assets/images/email.svg',
+                  height: 150,
+                ),
+              ),
+              const SizedBox(height: 24),
               // Title Body
               Text(
                   'To confirm your account, verify your account via the link that we sent to ${widget.email}.'),
-              const SizedBox(height: 24),
-
-              // Mail Icon
-              const Center(
-                child: Icon(
-                  size: 80,
-                  color: whiteColor,
-                  Icons.mail_outline,
-                ),
-              ),
               const SizedBox(height: 24),
 
               // Continue Button

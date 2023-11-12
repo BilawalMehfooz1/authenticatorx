@@ -66,6 +66,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/images/email.svg
     - assets/images/security.svg
     - assets/images/fingerprint.svg
 

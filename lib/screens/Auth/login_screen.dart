@@ -59,16 +59,33 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // clear controller Function
+  void clearController() {
+    _emailController.clear();
+  }
+
+  // Remove visibility
+  void visibility() {
+    setState(() {
+      _visibility = !_visibility;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    const width = double.infinity;
+    final style = Theme.of(context);
+    final brightness = style.brightness == Brightness.light;
+    final gradient = brightness ? gradient1 : gradient2;
+
     return Scaffold(
       body: SafeArea(
         child: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: gradient,
           ),
+          width: width,
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          width: double.infinity,
           child: Form(
             key: _formKey,
             child: Column(
@@ -99,47 +116,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 //Email Input Field
                 TextInputField(
                   labelText: 'Enter your email',
-                  keyboardType: TextInputType.emailAddress,
-                  isFocusedCallback: updateIsTextFocused,
                   controller: _emailController,
+                  isFocusedCallback: updateIsTextFocused,
+                  keyboardType: TextInputType.emailAddress,
                   icon: _isFirstDialog ? Icons.clear : null,
                   validator: (p0) {
                     return null;
                   },
-                  onPressed: () {
-                    setState(() {
-                      _emailController.clear();
-                    });
-                  },
+                  onPressed: clearController,
                 ),
                 const SizedBox(height: 12),
 
                 //Password Input Field
                 TextInputField(
-                  labelText: 'Enter your password',
                   obsecureText: _visibility,
+                  labelText: 'Enter your password',
                   keyboardType: TextInputType.text,
-                  isFocusedCallback: updateIsTextFocused,
                   controller: _passwordController,
+                  isFocusedCallback: updateIsTextFocused,
                   icon: _visibility ? Icons.visibility_off : Icons.visibility,
                   validator: (p0) {
                     return null;
                   },
-                  onPressed: () {
-                    setState(() {
-                      _visibility = !_visibility;
-                    });
-                  },
+                  onPressed: visibility,
                 ),
                 const SizedBox(height: 12),
 
                 //Login Button
                 InkWell(
-                  onTap: () {
-                    signUp();
-                  },
+                  onTap: () {},
                   child: Container(
-                    width: double.infinity,
+                    width: width,
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: const BoxDecoration(
@@ -159,10 +166,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 //Forgor Password Button
                 TextButton(
                   onPressed: () {},
-                  child: const Text(
+                  child: Text(
                     'Forgot password?',
                     style: TextStyle(
-                      color: blackColor,
+                      color: brightness ? blackColor : whiteColor,
                     ),
                   ),
                 ),
@@ -175,20 +182,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: InkWell(
                     onTap: signUp,
                     child: Container(
-                      width: double.infinity,
+                      width: width,
                       alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
+                        color: Colors.transparent,
                         border: Border.all(color: blueColor),
                         borderRadius:
                             const BorderRadius.all(Radius.circular(25)),
-                        color: Colors.transparent,
                       ),
                       child: const Text(
                         'Create new account',
                         style: TextStyle(
-                          color: blueColor,
                           fontSize: 16,
+                          color: blueColor,
                         ),
                       ),
                     ),

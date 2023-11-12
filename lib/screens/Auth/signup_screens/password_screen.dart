@@ -47,39 +47,39 @@ class _SignUpScreenState extends State<PasswordScreen> {
     });
   }
 
+  // Next Page method of username
+  void nextPage() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      FocusScope.of(context).unfocus();
+      await Future.delayed(const Duration(seconds: 1));
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EmailScreen(
+              username: widget.username,
+              password: _passwordController.text,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context);
     const width = double.infinity;
     final brightness = style.brightness == Brightness.light;
     final gradient = brightness ? gradient1 : gradient2;
-
-    // Next Page method of username
-    void nextPage() async {
-      if (_formKey.currentState!.validate()) {
-        setState(() {
-          _isLoading = true;
-        });
-
-        FocusScope.of(context).unfocus();
-        await Future.delayed(const Duration(seconds: 1));
-
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (mounted) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => EmailScreen(
-                username: widget.username,
-                password: _passwordController.text,
-              ),
-            ),
-          );
-        }
-      }
-    }
 
     return Scaffold(
       body: SafeArea(

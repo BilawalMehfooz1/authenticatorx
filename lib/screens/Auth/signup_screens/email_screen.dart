@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
+import 'package:authenticatorx/data/error_messages.dart';
 import 'package:authenticatorx/widgets/text_input_field.dart';
 import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 
@@ -63,13 +64,14 @@ class _SignUpScreenState extends State<EmailScreen> {
     }
   }
 
-  // Continue Method 
+  // Continue Method
   void nextPage() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
+      FocusScope.of(context).unfocus();
       final result = await AuthMethods().sendEmailVerification(
         context: context,
         email: _emailController.text,
@@ -82,11 +84,9 @@ class _SignUpScreenState extends State<EmailScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).removeCurrentSnackBar();
         if (result == 'success') {
         } else {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(result)));
+          showSnack(content: result, context: context);
         }
       }
     }
