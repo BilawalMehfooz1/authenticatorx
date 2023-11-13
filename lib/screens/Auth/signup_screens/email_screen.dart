@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
 import 'package:authenticatorx/data/error_messages.dart';
-import 'package:authenticatorx/widgets/text_input_field.dart';
+import 'package:authenticatorx/widgets/Auth/text_input_field.dart';
 import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 
 class EmailScreen extends StatefulWidget {

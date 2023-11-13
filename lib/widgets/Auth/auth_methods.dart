@@ -2,11 +2,51 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:authenticatorx/screens/home_screen.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_screen.dart';
 
 class AuthMethods {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+
+  /*Log in Method*/
+  Future<String> logInMethod({
+    required String email,
+    required String password,
+    required BuildContext context,
+  }) async {
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (context.mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) {
+              return const HomeScreen();
+            },
+          ),
+        );
+      }
+
+      return 'success';
+    } on FirebaseAuthException catch (error) {
+      switch (error.code) {
+        case 'user-not-found':
+          return 'No user found with this email. Please check your email or sign up.';
+        case 'wrong-password':
+          return 'Incorrect password. Please try again.';
+        default:
+          return 'Error: ${error.message}';
+      }
+    } catch (e) {
+      return 'Oops! Somthing went wrong. Please try again.';
+    }
+  }
+
+  /*Sign up Method*/
 
   // Part 1: Sending Email Verification
   Future<String> sendEmailVerification({

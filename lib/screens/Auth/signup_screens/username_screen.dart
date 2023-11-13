@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:authenticatorx/widgets/text_input_field.dart';
+import 'package:authenticatorx/widgets/Auth/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/password_screen.dart';
 
 class UserNameScreen extends StatefulWidget {

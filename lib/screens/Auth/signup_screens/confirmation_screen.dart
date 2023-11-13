@@ -1,9 +1,9 @@
-import 'package:authenticatorx/data/error_messages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:authenticatorx/data/colors.dart';
+import 'package:authenticatorx/data/error_messages.dart';
 import 'package:authenticatorx/screens/home_screen.dart';
 import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class ConfirmationScreen extends StatefulWidget {
   const ConfirmationScreen({

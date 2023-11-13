@@ -1,8 +1,10 @@
-import 'package:authenticatorx/screens/Auth/signup_screens/username_screen.dart';
+import 'package:authenticatorx/data/error_messages.dart';
+import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:authenticatorx/data/colors.dart';
-import 'package:authenticatorx/widgets/text_input_field.dart';
+import 'package:authenticatorx/widgets/Auth/text_input_field.dart';
+import 'package:authenticatorx/screens/Auth/signup_screens/username_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -69,6 +71,21 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _visibility = !_visibility;
     });
+  }
+
+  // Login Method
+  void _logIn() async {
+    final res = await AuthMethods().logInMethod(
+      context: context,
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+    if (res == 'success') {
+    } else {
+      if (context.mounted) {
+        showSnack(content: res, context: context);
+      }
+    }
   }
 
   @override
@@ -144,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 //Login Button
                 InkWell(
-                  onTap: () {},
+                  onTap: _logIn,
                   child: Container(
                     width: width,
                     alignment: Alignment.center,
