@@ -141,11 +141,11 @@ class _SignUpScreenState extends State<EmailScreen> {
                 TextInputField(
                   icon: _isTextFocused ? Icons.clear : null,
                   labelText: 'Email',
-                  validator: _validator,
                   onPressed: _clearController,
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   isFocusedCallback: updateIsTextFocused,
+                  validator: _validator,
                 ),
                 const SizedBox(height: 24),
 

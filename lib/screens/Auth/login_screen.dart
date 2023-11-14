@@ -1,8 +1,8 @@
-import 'package:authenticatorx/data/error_messages.dart';
-import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:authenticatorx/data/colors.dart';
+import 'package:authenticatorx/data/error_messages.dart';
+import 'package:authenticatorx/widgets/Auth/auth_methods.dart';
 import 'package:authenticatorx/widgets/Auth/text_input_field.dart';
 import 'package:authenticatorx/screens/Auth/signup_screens/username_screen.dart';
 
@@ -14,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
   bool _visibility = true;
   bool _isTextFocused = false;
   bool _isFirstDialog = false;
@@ -73,17 +74,52 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  // Email Validator
+  String? _emailValidator(value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email required.';
+    }
+    if (!value.contains('@') ||
+        (!value.endsWith('gmail.com') &&
+            !value.endsWith('yahoo.com') &&
+            !value.endsWith('outlook.com') &&
+            !value.endsWith('hotmail.com') &&
+            !value.endsWith('aol.com'))) {
+      return 'Enter a valid email address.';
+    }
+    return null;
+  }
+
+  // Password Validator
+  String? _passwordValidator(value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Password cannot be empty.';
+    }
+    if (value.trim().length < 6) {
+      return 'This assword is too short. Create a longer password with at least 6 letters and numbers.';
+    }
+    return null;
+  }
+
   // Login Method
   void _logIn() async {
-    final res = await AuthMethods().logInMethod(
-      context: context,
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
-    if (res == 'success') {
-    } else {
-      if (context.mounted) {
-        showSnack(content: res, context: context);
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+      final res = await AuthMethods().logInMethod(
+        context: context,
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      if (res == 'success') {
+      } else {
+        if (context.mounted) {
+          showErrorDialog(context: context, content: res);
+        }
       }
     }
   }
@@ -132,15 +168,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 //Email Input Field
                 TextInputField(
+                  onPressed: clearController,
+                  validator: _emailValidator,
                   labelText: 'Enter your email',
                   controller: _emailController,
                   isFocusedCallback: updateIsTextFocused,
                   keyboardType: TextInputType.emailAddress,
                   icon: _isFirstDialog ? Icons.clear : null,
-                  validator: (p0) {
-                    return null;
-                  },
-                  onPressed: clearController,
                 ),
                 const SizedBox(height: 12),
 
@@ -148,14 +182,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextInputField(
                   obsecureText: _visibility,
                   labelText: 'Enter your password',
-                  keyboardType: TextInputType.text,
+                  validator: _passwordValidator,
                   controller: _passwordController,
+                  keyboardType: TextInputType.text,
                   isFocusedCallback: updateIsTextFocused,
-                  icon: _visibility ? Icons.visibility_off : Icons.visibility,
-                  validator: (p0) {
-                    return null;
-                  },
                   onPressed: visibility,
+                  icon: _visibility ? Icons.visibility_off : Icons.visibility,
                 ),
                 const SizedBox(height: 12),
 
@@ -170,19 +202,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.all(Radius.circular(25)),
                       color: blueColor,
                     ),
-                    child: const Text(
-                      'Log in',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: whiteColor,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: whiteColor)
+                        : const Text(
+                            'Log in',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: whiteColor,
+                            ),
+                          ),
                   ),
                 ),
 
                 //Forgor Password Button
                 TextButton(
-                  onPressed: () {},
+                  onPressed: _isLoading ? null : () {},
                   child: Text(
                     'Forgot password?',
                     style: TextStyle(
@@ -197,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Visibility(
                   visible: !_isTextFocused,
                   child: InkWell(
-                    onTap: signUp,
+                    onTap: _isLoading ? null : signUp,
                     child: Container(
                       width: width,
                       alignment: Alignment.center,

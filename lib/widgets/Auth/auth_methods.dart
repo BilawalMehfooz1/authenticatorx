@@ -8,41 +8,72 @@ import 'package:authenticatorx/screens/Auth/signup_screens/confirmation_screen.d
 class AuthMethods {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  int consecutiveFailedAttempts = 0;
+  static const int maxConsecutiveFailedAttempts = 3;
 
-  /*Log in Method*/
+  /*Login Method*/
   Future<String> logInMethod({
     required String email,
     required String password,
     required BuildContext context,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      final userDoc = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
 
-      if (context.mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) {
-              return const HomeScreen();
-            },
-          ),
+      if (userDoc.docs.isNotEmpty) {
+        final userCredential = await _auth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
         );
+
+        final user = userCredential.user;
+
+        if (user != null) {
+          await user.reload();
+
+          if (user.emailVerified) {
+            consecutiveFailedAttempts = 0;
+            if (context.mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const HomeScreen();
+                  },
+                ),
+              );
+            }
+            return 'success';
+          } else {
+            // User's email is not verified
+            // Delete user from Firebase Authentication
+            await user.delete();
+            return 'Email not verified. Please check your email for the verification link.';
+          }
+        }
       }
 
-      return 'success';
+      return 'No user found. Please create a new account or verify your email.';
     } on FirebaseAuthException catch (error) {
-      switch (error.code) {
-        case 'user-not-found':
-          return 'No user found with this email. Please check your email or sign up.';
-        case 'wrong-password':
-          return 'Incorrect password. Please try again.';
-        default:
-          return 'Error: ${error.message}';
+      if (error.code == 'INVALID_LOGIN_CREDENTIALS') {
+        consecutiveFailedAttempts++;
+        if (consecutiveFailedAttempts >= maxConsecutiveFailedAttempts) {
+          // Display a message encouraging the user to reset their password
+          return 'Too many consecutive failed attempts. If you forgot your password, please use the "Forgot Password" option to reset it.';
+        } else {
+          // Display a friendly message instead of Firebase error message
+          return 'Incorrect password. Please check your password or reset it.';
+        }
+      } else if (error.code == 'too-many-requests') {
+        // Display a message about temporary block and guide the user on the next steps
+        return 'Access to this account has been temporarily disabled due to many failed login attempts. Please reset your password or try again later.';
+      } else {
+        return 'Error: ${error.message}';
       }
     } catch (e) {
-      return 'Oops! Somthing went wrong. Please try again.';
+      return 'Oops! Something went wrong. Please try again later.';
     }
   }
 
